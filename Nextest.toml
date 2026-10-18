@@ -1,0 +1,14 @@
+# cargo-nextest configuration. Used by `cargo nextest run` and `cargo llvm-cov nextest`.
+
+[profile.default]
+fail-fast = false
+
+[profile.ci]
+fail-fast = false
+# One retry: a test that passes on retry is reported as FLAKY (see docs/testing.md section 5).
+retries = 1
+slow-timeout = { period = "30s", terminate-after = 4 }
+
+# Writes target/nextest/ci/junit.xml
+[profile.ci.junit]
+path = "junit.xml"

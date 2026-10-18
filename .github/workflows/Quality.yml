@@ -1,0 +1,125 @@
+name: Quality
+
+# Per-PR: tests (nextest + JUnit), coverage, dependency/licence check.
+# Nightly: ignored tests, mutation testing. Failures on main or nightly open an issue.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * *" # 02:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+
+jobs:
+  tests-coverage:
+    name: Tests and coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest,cargo-llvm-cov,cargo-deny
+
+      # Licence and advisory policy. Create deny.toml in phase 0 (choose the project licence first).
+      - name: Dependency and licence check
+        run: cargo deny check
+
+      # Raise --fail-under-lines as coverage grows (docs/testing.md section 7). Never lower it.
+      - name: Tests with coverage
+        run: >
+          cargo llvm-cov nextest --workspace --profile ci
+          --lcov --output-path lcov.info --fail-under-lines 60
+
+      - name: Test summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: target/nextest/ci/junit.xml
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            target/nextest/ci/junit.xml
+            lcov.info
+          if-no-files-found: warn
+
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+      - name: Open issue if main or nightly failed
+        if: failure() && (github.event_name == 'schedule' || github.ref == 'refs/heads/main')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh issue create
+          --title "Quality run failed on ${{ github.ref_name }} ($(date -u +%F))"
+          --body "See $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+  nightly:
+    name: Nightly deep checks
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest,cargo-mutants
+
+      - name: Run all tests including ignored
+        run: cargo nextest run --workspace --profile ci --run-ignored all
+
+      # Mutation testing: report only at first. Adjust crate names to the real workspace.
+      - name: Mutation testing (L0 to L2)
+        continue-on-error: true
+        run: >
+          cargo mutants
+          -p umlforge-geom -p umlforge-model -p umlforge-diagram
+          -p umlforge-history -p umlforge-layout -p umlforge-validate
+          --timeout 60
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutants
+          path: mutants.out
+          if-no-files-found: ignore
+
+      - name: Open issue if nightly failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh issue create
+          --title "Nightly deep checks failed ($(date -u +%F))"
+          --body "See $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

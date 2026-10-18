@@ -1,0 +1,154 @@
+name: Release
+
+# Trigger: push a tag like v0.1.0 (cut with `cargo xtask version 0.1.0`, then `git tag v0.1.0`).
+on:
+  push:
+    tags: ["v*"]
+
+env:
+  CARGO_TERM_COLOR: always
+  # Keep in sync with the `dioxus` version in Cargo.toml.
+  DIOXUS_CLI_VERSION: "0.7.1"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (same gate as CI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo xtask layers
+      - run: cargo xtask wasm
+
+  build-windows:
+    name: Windows installer
+    runs-on: windows-latest
+    needs: [verify]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: dioxus-cli@${{ env.DIOXUS_CLI_VERSION }}
+      - name: Bundle desktop app
+        working-directory: apps/umlforge-desktop
+        # Check `dx bundle --help` for your dx version if --package-types is rejected.
+        run: dx bundle --platform desktop --release --package-types nsis
+      - name: Collect installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Get-ChildItem -Path target/dx/umlforge-desktop/bundle -Recurse -Include *.exe,*.msi |
+            ForEach-Object { Copy-Item $_.FullName dist/ }
+          if (-not (Get-ChildItem dist)) { throw "No installer produced" }
+      # Optional signing: runs only when the secrets exist.
+      # Add WINDOWS_CERT_BASE64 and WINDOWS_CERT_PASSWORD in repo secrets.
+      - name: Sign installer (optional)
+        shell: pwsh
+        env:
+          WINDOWS_CERT_BASE64: ${{ secrets.WINDOWS_CERT_BASE64 }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_BASE64)) {
+            Write-Host "Signing secrets are not configured; skipping installer signing."
+            exit 0
+          }
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CERT_PASSWORD)) {
+            throw "WINDOWS_CERT_PASSWORD is required when WINDOWS_CERT_BASE64 is configured."
+          }
+          $certificatePath = Join-Path $PWD "cert.pfx"
+          try {
+            [IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:WINDOWS_CERT_BASE64))
+            $signtoolPath = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1
+            if (-not $signtoolPath) { throw "Windows SDK signtool.exe was not found on the runner." }
+            Get-ChildItem dist\*.exe | ForEach-Object {
+              & $($signtoolPath.FullName) sign /f $certificatePath /p $env:WINDOWS_CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $_.FullName
+              if ($LASTEXITCODE -ne 0) { throw "signtool failed for $($_.Name)." }
+            }
+          } finally {
+            Remove-Item $certificatePath -Force -ErrorAction SilentlyContinue
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: umlforge-windows
+          path: dist/*
+          if-no-files-found: error
+
+  build-web:
+    name: Web bundle
+    runs-on: ubuntu-latest
+    needs: [verify]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: dioxus-cli@${{ env.DIOXUS_CLI_VERSION }}
+      - name: Build web app
+        working-directory: apps/umlforge-web
+        run: dx build --platform web --release
+      - name: SPA fallback for GitHub Pages
+        run: cp target/dx/umlforge-web/release/web/public/index.html target/dx/umlforge-web/release/web/public/404.html
+      - name: Zip web bundle
+        run: |
+          mkdir -p dist
+          (cd target/dx/umlforge-web/release/web/public && zip -r "$GITHUB_WORKSPACE/dist/umlforge-web-${GITHUB_REF_NAME}.zip" .)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: umlforge-web-zip
+          path: dist/*.zip
+          if-no-files-found: error
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/dx/umlforge-web/release/web/public
+
+  github-release:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-web]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: umlforge-windows
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: umlforge-web-zip
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            Windows installer and web bundle attached.
+            If the installer is not code-signed, Windows SmartScreen may warn on first run.
+
+  deploy-pages:
+    name: Deploy web to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [build-web]
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
