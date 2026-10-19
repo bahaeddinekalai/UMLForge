@@ -1,0 +1,17 @@
+/target/
+/dist/
+/log/
+/mutants.out
+/lcov.info
+/coverage/
+
+# Editor and operating system files
+/.DS_Store
+/Thumbs.db
+
+# Local secrets and certificates
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12

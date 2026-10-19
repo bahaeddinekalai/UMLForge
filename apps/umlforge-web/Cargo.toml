@@ -1,0 +1,17 @@
+[package]
+name = "umlforge-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+dioxus = { workspace = true, features = ["launch", "web"] }
+umlforge-ui = { path = "../../crates/ui", features = ["web"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom.workspace = true
+
+[lints]
+workspace = true

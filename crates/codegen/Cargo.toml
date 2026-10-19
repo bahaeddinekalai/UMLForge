@@ -1,0 +1,13 @@
+[package]
+name = "umlforge-codegen"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Code generation and reverse engineering for UMLForge"
+
+[dependencies]
+umlforge-model = { path = "../model" }
+
+[lints]
+workspace = true

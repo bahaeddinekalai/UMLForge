@@ -1,0 +1,16 @@
+[package]
+name = "umlforge-format"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Versioned native project format for UMLForge"
+
+[dependencies]
+umlforge-diagram = { path = "../diagram" }
+umlforge-model = { path = "../model" }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

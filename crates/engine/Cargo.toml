@@ -1,0 +1,22 @@
+[package]
+name = "umlforge-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Headless command engine for UMLForge"
+
+[dependencies]
+umlforge-diagram = { path = "../diagram" }
+umlforge-format = { path = "../format" }
+umlforge-history = { path = "../history" }
+umlforge-io = { path = "../io" }
+umlforge-layout = { path = "../layout" }
+umlforge-model = { path = "../model" }
+umlforge-render = { path = "../render" }
+umlforge-validate = { path = "../validate" }
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

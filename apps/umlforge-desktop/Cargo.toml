@@ -1,0 +1,14 @@
+[package]
+name = "umlforge-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+dioxus = { workspace = true, features = ["launch", "desktop"] }
+umlforge-ui = { path = "../../crates/ui", features = ["desktop"] }
+
+[lints]
+workspace = true

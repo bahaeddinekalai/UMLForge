@@ -8,30 +8,30 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 
 1. **Dependencies first.** Ids, the model/view split, commands, undo/redo and the file format are touched by everything. Getting them wrong costs a rewrite, so they come before any screen.
 2. **Prove the pipeline early.** CI, the web deploy and the Windows installer work in phase 0 with an empty app, so every later phase ships continuously.
-3. **Headless before graphical.** The engine, SVG renderer and CLI (phase 2) let agents and tests drive and verify everything before the UI exists. The UI is then a thin layer (AGENTS.md rule 8).
+3. **Headless before graphical.** The engine, SVG renderer and CLI (phase 2) will let agents and tests drive and verify everything before the UI exists. The UI is intended to be a thin layer (see AGENTS.md rule 8).
 4. **Riskiest things early.** Canvas performance with 2,000 views, undo/redo across model and view, and the file format are the three ways this project can fail. Each has an early spike or a dedicated phase.
 5. **Vertical slices.** Each phase ends with something a person can use and a tagged release, not a pile of unconnected parts.
 6. **Most-used first.** Class diagrams, then the other core diagram types, then the long tail.
 7. **Least-used and most-dependent last.** Plugins need a stable model API; reverse engineering and XMI are large and rarely used; vendor-style shape libraries have licensing questions. They come last.
 
-**Scope of 1.0:** all P0 and P1 rows (phases 0 to 8), plus Windows signing (phase 9). P2 rows are the long tail (phase 10) and may be pulled forward when cheap, but never at the cost of a 1.0 row.
+**Scope of 1.0:** the currently planned scope is all P0 and P1 rows (phases 0 to 8), plus Windows signing (phase 9). P2 rows are the long tail (phase 10) and may be pulled forward when cheap, but never at the cost of a 1.0 row.
 
 ## Summary
 
-| Phase | Goal | Effort | Release |
-|---|---|---|---|
-| 0 | Foundations: workspace, CI/CD, tokens, test tooling | S | none (pipeline proven) |
-| 1 | Core data: geometry, model, diagram, history, native format | M | none |
-| 2 | Engine, SVG renderer, CLI (headless vertical slice) | M | none |
-| 3 | Walking skeleton UI on web and Windows | L | v0.1 alpha |
-| 4a | Class diagram, complete | XL | v0.2 |
-| 4b | Formatting, export, save conveniences, performance gate | L | v0.3 beta |
-| 5 | Editing power and quality tools | L | v0.4 |
-| 6 | Core diagram types | XL | v0.5 |
-| 7 | More diagrams and `.mdj` compatibility | L | v0.6 |
-| 8 | Code generation, DDL, automation, install polish | L | v0.9 release candidate |
-| 9 | Hardening: performance, accessibility audit, signing | M | v1.0 |
-| 10 | Long tail (P2) in four ordered waves | XL | v1.x |
+| Phase | Goal                                                        | Effort | Release                |
+| ----- | ----------------------------------------------------------- | ------ | ---------------------- |
+| 0     | Foundations: workspace, CI/CD, tokens, test tooling         | S      | none (pipeline proven) |
+| 1     | Core data: geometry, model, diagram, history, native format | M      | none                   |
+| 2     | Engine, SVG renderer, CLI (headless vertical slice)         | M      | none                   |
+| 3     | Walking skeleton UI on web and Windows                      | L      | v0.1 alpha             |
+| 4a    | Class diagram, complete                                     | XL     | v0.2                   |
+| 4b    | Formatting, export, save conveniences, performance gate     | L      | v0.3 beta              |
+| 5     | Editing power and quality tools                             | L      | v0.4                   |
+| 6     | Core diagram types                                          | XL     | v0.5                   |
+| 7     | More diagrams and `.mdj` compatibility                      | L      | v0.6                   |
+| 8     | Code generation, DDL, automation, install polish            | L      | v0.9 release candidate |
+| 9     | Hardening: performance, accessibility audit, signing        | M      | v1.0                   |
+| 10    | Long tail (P2) in four ordered waves                        | XL     | v1.x                   |
 
 ---
 
@@ -40,11 +40,12 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** an empty app that builds, tests, ships and looks right, so nothing later is blocked by plumbing.
 
 **Steps**
+
 1. Decisions, written into `docs/decisions.md`: project licence (drives `deny.toml`), final name and a trademark sanity check (UMLForge is a working name), pinned Dioxus and `dx` versions.
 2. Cargo workspace skeleton with the crate layout from AGENTS.md section 2, shared lints (`unsafe_code = "forbid"`, clippy panic-free denies), `rust-toolchain.toml`.
 3. `xtask`: `layers`, `wasm`, `parity` (including the build-plan check), `test-report` stub.
-4. CI green: `ci.yml`, `quality.yml`, `release.yml` from this repo; `deny.toml`; `.config/nextest.toml`; Codecov token.
-5. `ui/src/theme.rs` with the tokens from `docs/design.md`, light and dark, plus the contrast test; i18n string-table skeleton; font files with licences and `ATTRIBUTION.md`.
+4. CI green: `.github/workflows/ci.yml`, `.github/workflows/Quality.yml`, and `.github/workflows/Release.yml`; `deny.toml`; `.config/nextest.toml`; Codecov token.
+5. `crates/ui/src/theme.rs` with the tokens from `Design.md`, light and dark, plus the contrast test; i18n string-table skeleton; font files with licences and `ATTRIBUTION.md`.
 6. `crates/testkit`: injectable id generator and clock, temp-dir helpers, snapshot helpers.
 7. Hello-world Dioxus app for web and desktop showing the theme; tag `v0.0.1` to prove the release pipeline, Pages deploy and Windows installer end to end.
 
@@ -57,6 +58,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** the data model and its rules, fully tested, with no UI.
 
 **Steps**
+
 1. `geom`: points, rects, transforms, hit tests, segment intersection, border anchors. Property tests.
 2. `model`: ids (stable, injectable generator), project, packages, classifier kinds needed for classes first, relationships, tags and stereotypes (fields only). Walkers bounded against cycles.
 3. `diagram`: diagrams, views that reference model ids, connectors, z-order, formatting fields (stored, not yet editable).
@@ -73,6 +75,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** everything that can be done headless, so agents and tests can verify features without a screen.
 
 **Steps**
+
 1. `engine`: `Session`, command registry, command spec (id, label, params doc, `enabled`, `run`), undo integration. First commands: new project, add package, add class, move view, delete (from diagram, from model).
 2. `render`: scene graph and SVG output for class diagrams. This is the oracle: golden SVG tests with `insta`.
 3. `umlforge-cli`: `new`, `info`, `commands`, `run <command> --params`, `export --svg`.
@@ -88,10 +91,11 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** the thinnest end-to-end product: create a class, move it, save, reopen, on web and Windows.
 
 **Steps**
+
 1. **Spike: how to draw the canvas.** Render the 2,000-view benchmark scene as SVG in the DOM versus an HTML canvas, in Dioxus web and desktop. Measure pan, zoom and drag. Pick one, record the numbers and the decision in `docs/architecture.md`. Do this before building the canvas; it is the largest technical risk.
 2. **Spike: file access on the web.** The File System Access API is not available in every browser; decide the fallback (upload and download) and record it.
 3. UI kit primitives (Button, Field, Menu, Dialog, Tree, Toast, Tooltip) and the `/gallery` page, light and dark, with component tests.
-4. App shell from `docs/design.md`: top bar, explorer, canvas, properties, status bar, tabs; real menus bound to command ids; keyboard shortcuts; platform-services trait (open, save, clipboard) with desktop and web implementations.
+4. App shell from `Design.md`: top bar, explorer, canvas, properties, status bar, tabs; real menus bound to command ids; keyboard shortcuts; platform-services trait (open, save, clipboard) with desktop and web implementations.
 5. Canvas basics: pan, zoom, select, marquee, move, resize, grid and snap, toolbox, create a class and a connector.
 6. Explorer tree and basic properties panel (name).
 7. WebDriver e2e journey 1: new project, add class, rename, move, save, reload.
@@ -105,6 +109,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** the most-used diagram done well, including everything it needs from the canvas.
 
 **Steps**
+
 1. Class, interface, enumeration, data type, signal with attributes and operations.
 2. Relationships: association (ends, multiplicity, navigability, aggregation, composition), generalization, realization, dependency, usage, association class.
 3. Connector routing styles, waypoints, reconnecting ends.
@@ -121,6 +126,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** make class diagrams presentable, shareable and fast.
 
 **Steps**
+
 1. Formatting: fill, line, font; reset to default.
 2. Export to PNG, JPEG, clipboard image, JSON.
 3. Recent files, autosave and crash recovery, preferences, model-and-view copy and paste.
@@ -136,6 +142,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** the features that make daily use pleasant.
 
 **Steps**
+
 1. Alignment guides, align and distribute, self-connectors, containment, auto-resize.
 2. Explorer search and "find views".
 3. Validation with a problems panel; find in project; jump from problem to element.
@@ -152,6 +159,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** the diagrams most people reach for after classes. Build in this order, easiest to hardest, so each one reuses the last.
 
 **Steps**
+
 1. General shapes and annotations (they are used by every other diagram).
 2. Use case diagram.
 3. ER diagram (entities, columns, relationships).
@@ -169,6 +177,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** breadth, and the ability to bring existing projects in.
 
 **Steps**
+
 1. Open and save `.mdj` projects for every diagram type that exists. Derive the schema from files you create and from fixtures the maintainers supply with permission; preserve unknown fields (AGENTS.md rule 5). Start with class and use case, widen as types land.
 2. Object, component and deployment diagrams.
 3. Flowchart, data flow diagram, C4.
@@ -183,6 +192,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** the productivity features and the release-candidate polish.
 
 **Steps**
+
 1. Code generation framework (template-driven), then Java, Python, TypeScript; zip download on the web build.
 2. DDL generation from ER diagrams.
 3. MCP server exposing every command.
@@ -197,6 +207,7 @@ Effort is relative (S small, M medium, L large, XL very large), not a date. Insi
 **Goal:** trustworthy enough to recommend.
 
 **Steps**
+
 1. Performance pass against budgets on both targets; memory check with the largest benchmark scene.
 2. Accessibility audit: the manual release checklist in `docs/testing.md` section 7, fixes, and a second keyboard-only pass of every feature.
 3. Windows code signing so the installer does not trigger SmartScreen warnings (needs a certificate and the two secrets in `release.yml`).

@@ -1,0 +1,13 @@
+[package]
+name = "umlforge-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Semantic project model for UMLForge"
+
+[dependencies]
+serde.workspace = true
+
+[lints]
+workspace = true

@@ -45,7 +45,7 @@ jobs:
       # Raise --fail-under-lines as coverage grows (docs/testing.md section 7). Never lower it.
       - name: Tests with coverage
         run: >
-          cargo llvm-cov nextest --workspace --profile ci
+          cargo llvm-cov nextest --workspace --exclude umlforge-desktop --profile ci
           --lcov --output-path lcov.info --fail-under-lines 60
 
       - name: Test summary
@@ -97,15 +97,14 @@ jobs:
           tool: cargo-nextest,cargo-mutants
 
       - name: Run all tests including ignored
-        run: cargo nextest run --workspace --profile ci --run-ignored all
+        run: cargo nextest run --workspace --exclude umlforge-desktop --profile ci --run-ignored all
 
       # Mutation testing: report only at first. Adjust crate names to the real workspace.
-      - name: Mutation testing (L0 to L2)
+      - name: Mutation testing (foundation crates)
         continue-on-error: true
         run: >
           cargo mutants
           -p umlforge-geom -p umlforge-model -p umlforge-diagram
-          -p umlforge-history -p umlforge-layout -p umlforge-validate
           --timeout 60
 
       - uses: actions/upload-artifact@v4

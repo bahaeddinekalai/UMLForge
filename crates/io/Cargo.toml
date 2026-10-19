@@ -1,0 +1,14 @@
+[package]
+name = "umlforge-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Import and export services for UMLForge"
+
+[dependencies]
+umlforge-format = { path = "../format" }
+umlforge-render = { path = "../render" }
+
+[lints]
+workspace = true

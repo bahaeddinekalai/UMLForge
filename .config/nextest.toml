@@ -1,0 +1,13 @@
+# Shared with cargo-nextest and cargo llvm-cov nextest.
+
+[profile.default]
+fail-fast = false
+
+[profile.ci]
+fail-fast = false
+# One retry: a test that passes on retry is reported as FLAKY (see Testing.md section 5).
+retries = 1
+slow-timeout = { period = "30s", terminate-after = 4 }
+
+[profile.ci.junit]
+path = "junit.xml"

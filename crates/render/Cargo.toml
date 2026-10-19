@@ -1,0 +1,15 @@
+[package]
+name = "umlforge-render"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Diagram scene graph and SVG renderer for UMLForge"
+
+[dependencies]
+umlforge-diagram = { path = "../diagram" }
+umlforge-geom = { path = "../geom" }
+umlforge-model = { path = "../model" }
+
+[lints]
+workspace = true
