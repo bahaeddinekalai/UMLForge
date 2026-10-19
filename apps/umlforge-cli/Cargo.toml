@@ -1,0 +1,14 @@
+[package]
+name = "umlforge-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+umlforge-automation = { path = "../../crates/automation" }
+umlforge-engine = { path = "../../crates/engine" }
+
+[lints]
+workspace = true

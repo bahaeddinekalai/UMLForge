@@ -1,0 +1,15 @@
+[package]
+name = "umlforge-diagram"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Diagram and presentation model for UMLForge"
+
+[dependencies]
+umlforge-geom = { path = "../geom" }
+umlforge-model = { path = "../model" }
+serde.workspace = true
+
+[lints]
+workspace = true

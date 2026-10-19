@@ -8,17 +8,17 @@ The product name is always written **UMLForge** in user-facing text (UI, window 
 
 ## 1. Orientation (5 minutes)
 
-| Read | Why |
-|---|---|
-| `docs/architecture.md` | Crate map, dependency layers, engine/UI seam, model and diagram data model (to be written by the first agent; keep it short and current) |
-| `docs/development.md` | Build, test, run web and desktop, drive the app programmatically (to be written) |
-| `docs/parity-checklist.md` | **The authoritative feature list.** Every StarUML feature we will reproduce, with status and the branch that owns it |
-| `docs/build-plan.md` | **The order to build things in.** Phases 0 to 10, which checklist rows belong to each, and exit criteria. Pick work from the lowest open phase |
-| `docs/design.md` | The visual and interaction design ("Paper & Ink"): tokens, typography, layout, components, accessibility, voice. Read before any UI change |
-| `docs/testing.md` | What must and must not be tested, test layers, quality gates, coverage floors, how results are monitored, definition of done |
-| `.github/workflows/ci.yml`, `release.yml` | What the gates are and how Windows and web builds ship |
-| `docs/gaps.md` | Known shortfalls, ranked (create when the first gap appears) |
-| `log/devlog.md` | Terse per-session log of what landed and what is still open (local, gitignored) |
+| Read                                      | Why                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs/architecture.md`                    | Crate map, dependency layers, engine/UI seam, model and diagram data model                                                                 |
+| `docs/development.md`                     | Build, test, run web and desktop; setup instructions                                                                                       |
+| `Parity-checklist.md`                     | **The authoritative feature list.** Every feature, status and branch                                                                       |
+| `Build-plan.MD`                           | **The order to build things in.** Phases, checklist rows and exit criteria                                                                 |
+| `Design.md`                               | The visual and interaction design ("Paper & Ink"): tokens, typography, layout, components, accessibility, voice. Read before any UI change |
+| `Testing.md`                              | What must and must not be tested, test layers, quality gates, coverage floors, how results are monitored, definition of done               |
+| `.github/workflows/ci.yml`, `release.yml` | What the gates are and how Windows and web builds ship                                                                                     |
+| `docs/gaps.md`                            | Known shortfalls, ranked (create when the first gap appears)                                                                               |
+| `log/devlog.md`                           | Terse per-session log of what landed and what is still open (local, gitignored)                                                            |
 
 Files marked "to be written" do not exist yet. If you need one, create it small and keep it accurate; do not invent content you have not verified in the code.
 
@@ -70,10 +70,10 @@ People trust the app with their models; a crash loses them. A malformed project 
 1. **Everything is a command.** New user-visible behaviour = a command in `crates/engine/src/<area>_cmds.rs` (with a `specs()` function, registered in `commands.rs`) with id, label, menu path, shortcut, params doc, `enabled` and `run`, plus tests. UI, CLI, control channel and MCP all dispatch by id. Only pure view state (zoom, panels, theme) belongs to the UI shell.
 2. **Model and view are separate.** The semantic model (`crates/model`) knows nothing about pixels; the diagram (`crates/diagram`) references model elements by id. Deleting a view must not delete the model element unless the user asks ("delete from model" vs "delete from diagram"). Never collapse the two.
 3. **Stable ids.** Every model element, view and diagram has a stable string id that survives save/load and import/export. Never regenerate ids on load.
-4. **Clean-room.** We study StarUML for *behaviour and look only*, from its public documentation, the file format as observed from our own saved files, and UML/SysML/BPMN/C4 public specifications (OMG UML, SysML, BPMN, XMI, ISO notation). **Never** copy StarUML source code, icons, stylesheets, templates, translations or extension code; never decompile or read its application bundle as a source of implementation; never paste snippets from its repository. Implement from specs and observed behaviour. If you have read StarUML's source, say so in the PR so a maintainer can decide whether another agent should take that feature. Third-party assets (icons, fonts, shape libraries) must be permissively licensed, keep their license file next to them, and get a row in `ATTRIBUTION.md` (path, title, author, source, license) in the same change. Do not use "StarUML" in user-facing strings except in a factual compatibility sentence ("opens StarUML .mdj files"), and never use its logo.
+4. **Clean-room.** We study StarUML for _behaviour and look only_, from its public documentation, the file format as observed from our own saved files, and UML/SysML/BPMN/C4 public specifications (OMG UML, SysML, BPMN, XMI, ISO notation). **Never** copy StarUML source code, icons, stylesheets, templates, translations or extension code; never decompile or read its application bundle as a source of implementation; never paste snippets from its repository. Implement from specs and observed behaviour. If you have read StarUML's source, say so in the PR so a maintainer can decide whether another agent should take that feature. Third-party assets (icons, fonts, shape libraries) must be permissively licensed, keep their license file next to them, and get a row in `ATTRIBUTION.md` (path, title, author, source, license) in the same change. Do not use "StarUML" in user-facing strings except in a factual compatibility sentence ("opens StarUML .mdj files"), and never use its logo.
 5. **File compatibility is a feature, but verify it yourself.** Goal: open and save `.mdj` JSON projects. Derive the schema from files you create and from files the user supplies as test fixtures with permission. Keep unknown fields verbatim so round-trips do not lose data. Version the native format and write migrations with golden-file tests.
-6. **Follow the design guide.** The look is defined in `docs/design.md`: minimalist, readable by every age, one teal accent, labelled controls, keyboard-complete, WCAG 2.2 AA. No hard-coded colours, sizes or strings in components: use the theme tokens (`ui/src/theme.rs`), the kit components (`ui/src/kit/`) and the i18n table. Support light and dark from day one.
-7. **Tests are the gate, at every level.** A feature is never tested only as a block: every function that builds it has its own unit or property tests, the feature has command or integration tests, and its UI has component tests (see `docs/testing.md` for what must and must not be tested, and the definition of done). Also: round-trip tests for formats, golden SVG tests for rendering (the SVG renderer in `render` is the oracle; UI canvas output must match it), fuzz tests for importers. Do not regress coverage floors or the parity-count floor (see section 6).
+6. **Follow the design guide.** The look is defined in `Design.md`: minimalist, readable by every age, one teal accent, labelled controls, keyboard-complete, WCAG 2.2 AA. No hard-coded colours, sizes or strings in components: use the theme tokens (`crates/ui/src/theme.rs`), the kit components (`crates/ui/src/kit/`) and the i18n table. Support light and dark from day one.
+7. **Tests are the gate, at every level.** A feature is never tested only as a block: every function that builds it has its own unit or property tests, the feature has command or integration tests, and its UI has component tests (see `Testing.md` for what must and must not be tested, and the definition of done). Also: round-trip tests for formats, golden SVG tests for rendering (the SVG renderer in `render` is the oracle; UI canvas output must match it), fuzz tests for importers. Do not regress coverage floors or the parity-count floor (see section 6).
 8. **The UI is thin and data-driven.** UI state lives in `ui/src/state.rs` (serde) so the control channel can read and drive it. Components call the engine; they do not contain modelling logic.
 9. **Never break wasm.** L0-L6 must `cargo check --target wasm32-unknown-unknown` (run `cargo xtask wasm`). File-system, threads and process code is `cfg(not(target_arch = "wasm32"))` or goes through a platform-services trait (open/save dialogs, clipboard, storage). The web build stores projects in IndexedDB/File System Access API and downloads exports.
 10. **Performance is a feature.** Keep a benchmark diagram (e.g. 2,000 views, 3,000 connectors) and measure pan/zoom, drag, and open/save in release. Cull off-screen views, cache per revision, never re-layout the whole diagram per frame. Record before/after timings in the dev log.
@@ -83,16 +83,16 @@ People trust the app with their models; a crash loses them. A malformed project 
 
 ## 4. One feature, one branch (workflow)
 
-Every feature in `docs/parity-checklist.md` has an id (for example `CLS-004`). Work on exactly one feature per branch and per PR.
+Every feature in `Parity-checklist.md` has an id (for example `CLS-004`). Work on exactly one feature per branch and per PR.
 
 - **Branch name:** `feat/<ID>-<short-slug>`, e.g. `feat/CLS-004-association-ends`. Bug fixes: `fix/<ID or issue>-<slug>`. Docs/infra: `chore/<slug>`. Branch from the latest `main`.
 - **Never** stack unrelated features on one branch. If feature B needs feature A, wait for A to merge, or branch B from A and say so in the PR description ("depends on #N"); rebase when A lands.
-- **Pick work in plan order.** Take rows from the lowest-numbered phase in `docs/build-plan.md` that still has open rows. Starting a row from a later phase needs a maintainer's agreement, recorded in the PR.
+- **Pick work in plan order.** Take rows from the lowest-numbered phase in `Build-plan.MD` that still has open rows. Starting a row from a later phase needs a maintainer's agreement, recorded in the PR.
 - **Claim before you start:** in the checklist row, set status to `🚧` and the branch column to your branch name, in your first commit. This prevents two agents building the same feature.
 - **Commits:** small, keep the tree building at every step. Conventional prefixes (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
 - **Pull request into `main`** (trunk-based; `main` is always releasable). One PR per branch. The PR must:
   1. pass CI (`.github/workflows/ci.yml`: fmt, clippy, tests, layers, wasm check, web build, Windows build; and `quality.yml`: nextest, coverage, dependency and licence check);
-  1b. meet the definition of done in `docs/testing.md` section 9 (tests at the parts, feature and UI levels) and, for UI changes, the design review checklist in `docs/design.md` section 14;
+     1b. meet the definition of done in `Testing.md` section 9 (tests at the parts, feature and UI levels) and, for UI changes, the design review checklist in `Design.md` section 14;
   2. flip the checklist row to `✅` (or `🟡` if partial, with a note of what is missing) and add the PR number;
   3. update `docs/gaps.md` if you leave something open;
   4. include a screenshot or SVG golden for any visual change;
@@ -110,7 +110,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace                # includes doctests
 cargo nextest run --workspace --profile ci   # what quality.yml runs; faster, reports flaky tests
-cargo llvm-cov nextest --workspace    # coverage; stay at or above the layer floors in docs/testing.md
+cargo llvm-cov nextest --workspace    # coverage; stay at or above the layer floors in Testing.md
 cargo xtask layers
 cargo xtask wasm                      # if you touched L0-L6
 cargo xtask parity                    # checks the checklist file is well-formed and prints counts
@@ -124,7 +124,7 @@ dx build --platform web --release
 dx bundle --platform desktop --release   # Windows installer (run on a Windows machine or the CI runner)
 ```
 
-Install the Dioxus CLI at the **same version** as the `dioxus` crate in `Cargo.toml` (`cargo binstall dioxus-cli@<version>`); a mismatch causes confusing build errors. CLI flags change between Dioxus releases: if a command above is rejected, check `dx --help` for your version and fix this file in the same PR.
+Install the Dioxus CLI at the **same version** as the `dioxus` crate in `Cargo.toml` (`cargo binstall dioxus-cli --version <version> --no-confirm`); a mismatch causes confusing build errors. CLI flags change between Dioxus releases: if a command above is rejected, check `dx --help` for your version and fix this file in the same PR.
 
 **CI/CD** (GitHub Actions):
 
@@ -134,12 +134,12 @@ Install the Dioxus CLI at the **same version** as the `dioxus` crate in `Cargo.t
 
 ## 6. Parity tracking
 
-`docs/parity-checklist.md` is the single source of truth for scope. Rules:
+`Parity-checklist.md` is the single source of truth for scope. Rules:
 
 - One row per feature, one id, one owning branch. Statuses: `⬜` not started, `🚧` in progress, `🟡` partial, `✅` done, `⛔` deliberately out of scope (with reason).
 - Add rows when you discover a StarUML behaviour that is not listed; never delete a row, mark it `⛔` instead.
 - When a feature is done, the row names the command ids and the test that proves it.
-- Every row appears in exactly one phase of `docs/build-plan.md`; add new rows there in the same PR. A row marked `✅` lists the command ids and test names that prove it.
+- Every row appears in exactly one phase of `Build-plan.MD`; add new rows there in the same PR. A row marked `✅` lists the command ids and test names that prove it.
 - `cargo xtask parity` parses the file, fails on duplicate ids, malformed rows, rows missing from (or listed twice in) the build plan, and `✅` rows whose named tests do not exist, and writes the counts to `docs/parity-status.json`. CI checks the done-count never decreases below the committed floor in `crates/ui/src/parity.rs` (`FLOOR`); raise `FLOOR` when parity rises, never lower it.
 - The checklist describes **behaviour we observed or read in public docs**. Where a row says "verify", confirm against the app's visible behaviour before marking it done; do not guess.
 
@@ -149,10 +149,10 @@ Install the Dioxus CLI at the **same version** as the `dioxus` crate in `Cargo.t
 
 ## 8. Where things are tracked
 
-- `docs/parity-checklist.md`: scope and status of every feature.
-- `docs/build-plan.md`: build order and phase exit criteria.
-- `docs/design.md`: design system and accessibility rules.
-- `docs/testing.md`: testing rules and quality gates; results are monitored via `quality.yml`, Codecov and (from phase 5) the `/status/` dashboard.
+- `Parity-checklist.md`: scope and status of every feature.
+- `Build-plan.MD`: build order and phase exit criteria.
+- `Design.md`: design system and accessibility rules.
+- `Testing.md`: testing rules and quality gates; results are monitored via `.github/workflows/Quality.yml`, Codecov and (from phase 5) the `/status/` dashboard.
 - `docs/gaps.md`: ranked shortfalls and known bugs.
 - `ATTRIBUTION.md`: third-party assets and licenses.
 - `.github/workflows/`: CI and release pipelines.

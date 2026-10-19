@@ -5,10 +5,10 @@ fail-fast = false
 
 [profile.ci]
 fail-fast = false
-# One retry: a test that passes on retry is reported as FLAKY (see docs/testing.md section 5).
+# Legacy nextest configuration. The active settings are in `.config/nextest.toml`.
 retries = 1
 slow-timeout = { period = "30s", terminate-after = 4 }
 
-# Writes target/nextest/ci/junit.xml
+# Writes target/nextest/ci/junit.xml when using the legacy filename.
 [profile.ci.junit]
 path = "junit.xml"

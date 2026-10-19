@@ -1,0 +1,21 @@
+[package]
+name = "umlforge-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Cross-platform Dioxus interface for UMLForge"
+
+[features]
+default = []
+desktop = ["dioxus/desktop"]
+web = ["dioxus/web"]
+
+[dependencies]
+dioxus = { workspace = true, features = ["asset", "document", "html", "hooks", "macro", "signals"], default-features = false }
+umlforge-engine = { path = "../engine" }
+umlforge-render = { path = "../render" }
+web-sys.workspace = true
+
+[lints]
+workspace = true

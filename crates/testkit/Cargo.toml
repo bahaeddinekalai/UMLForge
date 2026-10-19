@@ -1,0 +1,15 @@
+[package]
+name = "umlforge-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Shared deterministic test fixtures and helpers for UMLForge"
+
+[dependencies]
+umlforge-diagram = { path = "../diagram" }
+umlforge-geom = { path = "../geom" }
+umlforge-model = { path = "../model" }
+
+[lints]
+workspace = true

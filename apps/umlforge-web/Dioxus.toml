@@ -1,0 +1,13 @@
+[application]
+name = "umlforge-web"
+default_platform = "web"
+
+[web.app]
+title = "UMLForge"
+
+[web.resource]
+style = []
+script = []
+
+[web.resource.dev]
+script = []

@@ -1,0 +1,40 @@
+/* Initial Paper & Ink tokens. Extend this shared theme as UI components are added. */
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  --canvas: #f7f5f1;
+  --surface: #ffffff;
+  --ink: #1b1f23;
+  --ink-muted: #58616b;
+  --line: #e3dfd7;
+  --line-strong: #8a9199;
+  --accent: #0e6b62;
+  --on-accent: #ffffff;
+  --danger: #b42318;
+  --success: #177245;
+  --warning: #8f5200;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #121518;
+    --surface: #1a1e22;
+    --ink: #eceff2;
+    --ink-muted: #a5aeb8;
+    --line: #2a3036;
+    --line-strong: #7c858f;
+    --accent: #5fcdbf;
+    --on-accent: #0b1412;
+    --danger: #ff8a7a;
+    --success: #5fd39a;
+    --warning: #f0b35a;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 16px;
+}

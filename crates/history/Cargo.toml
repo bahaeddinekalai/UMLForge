@@ -1,0 +1,14 @@
+[package]
+name = "umlforge-history"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Undo and redo history for UMLForge"
+
+[dependencies]
+umlforge-diagram = { path = "../diagram" }
+umlforge-model = { path = "../model" }
+
+[lints]
+workspace = true
